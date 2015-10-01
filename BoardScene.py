@@ -10,7 +10,6 @@ class BoardScene(QtGui.QGraphicsScene):
     def __init__(self, matrix, parent = None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
         self.game = matrix
-        self.player_idx = 1
         self.item_map = {}
         
     def conversion_factors(self):
@@ -42,23 +41,14 @@ class BoardScene(QtGui.QGraphicsScene):
         if real_coords is False:
             return False
         self.set_cell(real_coords)
-        self.signal_new_cell(real_coords, self.player_idx)
         winner = self.game.validate()
         if winner is False:
             self.next_player()
             return True
-        self.winner_idx, self.winning_cells = winner
-        self.signal_winner(self.winner_idx)
         self.highlight_winner()
         
     def highlight_winner(self):
-        pass
-    
-    def next_player(self):
-         # Next player
-        self.player_idx += 1
-        if self.player_idx > self.game.players:
-            self.player_idx = 1       
+        pass     
         
     def mouseDoubleClickEvent(self, *args, **kwargs):
         ret = QtGui.QGraphicsScene.mouseDoubleClickEvent(self, *args, **kwargs)

@@ -5,7 +5,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 from C4.GameMatrix import GameMatrix
-from C4.Board import BoardScene
+from C4.BoardScene import BoardScene
 
 
 class TestBoard(unittest.TestCase):

@@ -49,17 +49,17 @@ class TestGameMatrix(unittest.TestCase):
         # Stable
         r = diff_match(np.array([0,0,0,1,2,1,0]),0)
         self.assertEqual(r, 1)
-        r = diff_match(np.array([1,2,0,0,0,0]),0)
+        r = diff_match(np.array([1,2,1,0,0,0]),3)
         self.assertEqual(r, 1)
         
         # Rising
         # Short sequence
-        r = diff_match(np.array([0,0,0,1,2,3,1]),0)
+        r = diff_match(np.array([0,0,2,1,1,0,0]),0)
         self.assertEqual(r, 0)
         
-        r = diff_match(np.array([0,0,0,1,2,3,4]),0)
+        r = diff_match(np.array([0,1,0,1,1,1,1]),3)
         self.assertEqual(r, 2)  
-        r = diff_match(np.array([1,2,3,4,0,0,0]),0)
+        r = diff_match(np.array([1,1,1,0,1,0]),0)
         self.assertEqual(r, 2)           
         
         

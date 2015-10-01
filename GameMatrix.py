@@ -13,7 +13,10 @@ def diff_match(d, start, goal=4):
     rising = sub == [1]*sublen
     if rising.all():
         return 2
-    stable = sub[1:] == [0]*(sublen-1)
+    rising = sub == [-1]*sublen
+    if rising.all():
+        return 2    
+    stable = sub[:] == [0]*(sublen)
     if stable.all():
         return 1
     return 0
@@ -24,6 +27,12 @@ class GameMatrix(object):
         self.matrix = np.zeros(shape)
         self.players = 2
         self.goal  = 4
+        self.player_idx = 1 
+        """Current player"""
+        self.winner_idx = 0
+        """Winner of the game"""
+        self.winning_cells = []
+        """Cells found as winners"""
         
     @property
     def moves(self):
@@ -38,6 +47,12 @@ class GameMatrix(object):
     def dims(self):
         return len(self.matrix.shape)
     
+    def next_player(self):
+         # Next player
+        self.player_idx += 1
+        if self.player_idx > self.players:
+            self.player_idx = 1   
+    
     def gravity(self, coords):
         """Correct `coords` taking into account the effect of gravity on the first coordinate (y)"""
         coords = list(coords)
@@ -51,7 +66,7 @@ class GameMatrix(object):
             coords[0] = 0
         return tuple(coords)
     
-    def occupy(self, coords, player_idx):
+    def occupy(self, coords, player_idx=0):
         """Occupy requested coords with player_idx. 
         Returns coords really occupied."""
         if self.matrix[coords] != 0:
@@ -59,7 +74,10 @@ class GameMatrix(object):
             return False
         # Check for gravity
         real_coords = self.gravity(coords)
-        self.matrix[real_coords] = player_idx
+        if player_idx:
+            self.player_idx = player_idx
+        self.matrix[real_coords] = self.player_idx
+        self.next_player()
         return real_coords
         
     def validate_player(self, player_idx):
@@ -98,6 +116,7 @@ class GameMatrix(object):
                 break
         
         if solution is not None:
+            self.winner_idx = player_idx
             print 'The winner is:',player_idx
             end = solution + self.goal
             ret = []
@@ -105,6 +124,7 @@ class GameMatrix(object):
             for m in matches:
                 m = m[solution:end]
                 ret.append(m)
+            self.winning_cells = ret
             return ret
         return False
         
