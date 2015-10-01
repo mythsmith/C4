@@ -91,6 +91,14 @@ class TestGameMatrix(unittest.TestCase):
         r = m.validate_player(1)
         self.assertNotEqual(r, False)
         
+        # Different order
+        m.matrix[0,4] = 2
+        m.matrix[1,0] = 2
+        m.matrix[1,1] = 2
+        m.matrix[1,2] = 2
+        m.matrix[1,3] = 2
+        r = m.validate_player(2)
+        self.assertNotEqual(r, False)     
     
         
         

@@ -5,7 +5,6 @@ import numpy as np
 class BoardScene(QtGui.QGraphicsScene):
     signal_new_cell = lambda *a: 0
     signal_winner = lambda *a: 0
-    winner_idx = 0
     
     def __init__(self, matrix, parent = None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
@@ -20,14 +19,21 @@ class BoardScene(QtGui.QGraphicsScene):
         return delta_w, delta_h, mw, mh   
         
     def get_matrix_coords(self, y, x):
-        """Converts scene coords into matrix coords tuple"""
+        """Converts scene coords into matrix coords tuple
+        Returns y,x cell."""
         delta_w, delta_h, mw, mh = self.conversion_factors()
         ix = int(x/delta_w)
         iy = int(y/delta_h)
+        # Enforce boundaries
+        if iy == mh: 
+            iy = mh - 1
+        if ix == mw: 
+            ix = mw - 1
         return mh-iy-1, ix
     
     def get_scene_coords(self, iy, ix):
-        """Converts matrix coords into scene coordinates""" 
+        """Converts matrix coords into scene coordinates.
+        Returns x,y upper-left scene coords.""" 
         delta_w, delta_h, mw, mh = self.conversion_factors()
         mh, mw = self.game.shape 
         x = (ix)*delta_w
@@ -36,19 +42,22 @@ class BoardScene(QtGui.QGraphicsScene):
         
     def occupy(self, coords):
         matrix_coords = self.get_matrix_coords(*coords)
-        real_coords = self.game.occupy(matrix_coords, self.player_idx)
+        real_coords = self.game.occupy(matrix_coords)
         print 'occupy',coords,matrix_coords, real_coords
         if real_coords is False:
             return False
         self.set_cell(real_coords)
         winner = self.game.validate()
-        if winner is False:
-            self.next_player()
-            return True
-        self.highlight_winner()
+        if winner is not False:
+            self.highlight_winner()
+        return True
         
     def highlight_winner(self):
-        pass     
+        y, x = self.game.winning_cells
+        for i,px in enumerate(x):
+            py = y[i]
+            item = self.item_map[(py,px)]
+            item.setText('Win:{}'.format(self.game.winner_idx))   
         
     def mouseDoubleClickEvent(self, *args, **kwargs):
         ret = QtGui.QGraphicsScene.mouseDoubleClickEvent(self, *args, **kwargs)

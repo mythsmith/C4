@@ -10,6 +10,7 @@ def diff_match(d, start, goal=4):
     """Check for rising/stable match"""
     sublen = goal - 1
     sub = d[ start:start + sublen]
+    print 'diff_match',sub,sublen
     rising = sub == [1]*sublen
     if rising.all():
         return 2
@@ -99,11 +100,12 @@ class GameMatrix(object):
         print 'diffs',diffs
         # Moving window iteration
         solution = None
-        for i in xrange(len(d)-self.goal+1):
+        for i in xrange(len(d)-self.goal+2):
             rising = 0
             stable = 0
             for d in diffs:
                 r = diff_match(d, i, self.goal)
+                print 'diff_match',r
                 if r == 2: rising += 1
                 if r == 1: stable += 1
                 else: break
@@ -112,6 +114,7 @@ class GameMatrix(object):
                     break
             print 'index',i,rising,stable
             if rising == self.dims or rising == 1 and stable == (self.dims - 1):
+                print 'found solution',i
                 solution = i
                 break
         

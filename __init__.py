@@ -1,2 +1,2 @@
 import GameMatrix
-import Board
+import BoardScene
