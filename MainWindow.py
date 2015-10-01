@@ -19,6 +19,8 @@ class MainWindow(QtGui.QMainWindow):
         
         self.storage = Storage(database=database)
         
+        self.resize(600,700)
+        
     def save_finished(self):
         """If active game is finished, save and close its tab"""
         g = self.tabs.currentIndex()
@@ -38,11 +40,15 @@ class MainWindow(QtGui.QMainWindow):
         r = dia.exec_()
         user1 = unicode(dia.user1.text())
         user2 = unicode(dia.user2.text())
+        if user1==user2:
+            QtGui.QMessageBox.warning(self,'User names cannot be equal','You entered two equal user name.\n Please enter different user names.')
+            return
         
         user_uid = self.storage.add_users((user1,user2))
         user_map = {1:user_uid[user1],2:user_uid[user2]}
         self.user_maps.append(user_map)
-        game = GameMatrix()
+        shape = (dia.height.value(),dia.width.value())
+        game = GameMatrix(shape=shape, goal=dia.goal.value() )
         scene = BoardScene(game)
         scene.setSceneRect(0,0,700,600)
         view = QtGui.QGraphicsView(scene)
