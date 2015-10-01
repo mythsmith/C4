@@ -108,8 +108,9 @@ class GameMatrix(object):
                 r = diff_match(d, i, self.goal)
                 print 'diff_match',r
                 if r == 2: rising += 1
-                if r == 1: stable += 1
+                elif r == 1: stable += 1
                 else: break
+                print 'rising, stable', rising,stable
                 if rising > 1 and stable > 1:
                     print 'not a possible solution'
                     break
