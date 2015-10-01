@@ -3,6 +3,7 @@
 """Basic Connect4 logic"""
 import numpy as np
 
+#TODO: calculate score by time, not by moves
 # shape = (y,x)
 # slice [y,x]
 

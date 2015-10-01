@@ -1,4 +1,3 @@
-
 import unittest
 
 from PyQt4 import QtGui, QtCore
@@ -13,13 +12,10 @@ class TestBoard(unittest.TestCase):
     def setUp(self):
         self.m = GameMatrix()
         self.b = BoardScene(self.m)
-        self.b.setSceneRect(0,0,700,600)
+        self.b.setSceneRect(0, 0, 700, 600)
     
     def test_conversion_factors(self):
-        m,b = self.m, self.b
-        m = GameMatrix()
-        b= BoardScene(m)
-        b.setSceneRect(0,0,700,600)
+        m, b = self.m, self.b
         delta_w, delta_h, mw, mh = b.conversion_factors()
         self.assertEqual(mw, 7)
         self.assertEqual(mh, 6)
@@ -53,7 +49,7 @@ class TestBoard(unittest.TestCase):
         self.assertEqual(ret, (300, 200))
     
     def test_exec(self):
-        m,b = self.m, self.b
+        m, b = self.m, self.b
         v = QtGui.QGraphicsView(b)
         v.show()
         QtGui.qApp.exec_()
