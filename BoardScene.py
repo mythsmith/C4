@@ -7,10 +7,13 @@ class BoardScene(QtGui.QGraphicsScene):
     signal_winner = lambda *a: 0
     line_width = 4
     
-    def __init__(self, matrix, parent=None):
+    def __init__(self, game, colors=False, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
-        self.game = matrix
+        self.game = game
         self.item_map = {}
+        if colors is False:
+            colors = {p:int(6+p) for p in range(1,game.players+1)}
+        self.colors = colors
         
     def setSceneRect(self, *a, **k):
         r = QtGui.QGraphicsScene.setSceneRect(self, *a, **k)
@@ -114,7 +117,7 @@ class BoardScene(QtGui.QGraphicsScene):
         item = self.addRect(rect)
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.SolidPattern)
-        brush.setColor(int(player_idx+6))
+        brush.setColor(self.colors[player_idx])
         item.setBrush(brush)
         self.item_map[coords] = item
         return player_idx

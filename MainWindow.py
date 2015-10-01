@@ -6,7 +6,7 @@ class MainWindow(QtGui.QMainWindow):
         mb = self.menuBar()
         self.menu_game = mb.addMenu('Game')
         self.menu_game.addAction('New', self.new_game)
-        
+        self.menu_game.addAction('Pause', self.pause_game)
         self.tabs = QtGui.QTabWidget(parent = self)
         self.setCentralWidget(self.tabs)
         
@@ -24,6 +24,3 @@ class MainWindow(QtGui.QMainWindow):
         """Display paused games and allow to select a game to be resumed"""
         pass
     
-    def quit(self):
-        """Exit the app, discarding any running game"""
-        pass

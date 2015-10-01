@@ -2,6 +2,7 @@
 
 """Basic Connect4 logic"""
 import numpy as np
+from time import time 
 
 #TODO: calculate score by time, not by moves
 # shape = (y,x)
@@ -25,6 +26,7 @@ def diff_match(d, start, goal=4):
 
 class GameMatrix(object):
     
+    
     def __init__(self, shape=(6,7), players=2, goal=4):
         self.matrix = np.zeros(shape)
         self.players = 2
@@ -35,6 +37,11 @@ class GameMatrix(object):
         """Winner of the game"""
         self.winning_cells = []
         """Cells found as winners"""
+        self.startdate = 0
+        self.enddate = 0
+        self.delta = 0
+        self.zerotime = 0
+        self.scores = {p:0 for p in range(1, players+1)}
         
     @property
     def moves(self):
@@ -49,11 +56,31 @@ class GameMatrix(object):
     def dims(self):
         return len(self.matrix.shape)
     
+    # SCORES MANAGEMENT
+        
+    def start(self):
+        """Start the game new"""
+        self.startdate = time()
+        self.zerotime = time()
+        self.delta = 0
+        
+    def pause(self):
+        """Pause the game: add to delta for later resume"""
+        self.delta += time() - self.zerotime()
+        
+    def resume(self):
+        """Resume game: reset zerotime"""
+        self.zerotime = time()
+        
     def next_player(self):
-         # Next player
+        """Move turn to the next player"""
+        self.scores[self.player_idx]+= self.delta + time() - self.zerotime
+        self.zerotime = time()
         self.player_idx += 1
         if self.player_idx > self.players:
             self.player_idx = 1   
+    
+    # CELL OCCUPATION MANAGEMENT
     
     def gravity(self, coords):
         """Correct `coords` taking into account the effect of gravity on the first coordinate (y)"""
@@ -81,6 +108,8 @@ class GameMatrix(object):
         self.matrix[real_coords] = self.player_idx
         self.next_player()
         return real_coords
+    
+    # WINNER IDENTIFICATION
         
     def validate_player(self, player_idx):
         """Checks if player_idx is winning somewhere"""
@@ -130,6 +159,7 @@ class GameMatrix(object):
                 m = m[solution:end]
                 ret.append(m)
             self.winning_cells = ret
+            self.enddate = time()
             return ret
         return False
         

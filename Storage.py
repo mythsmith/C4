@@ -2,8 +2,9 @@ import sqlite3
 from os.path import expanduser
 from cPickle import dumps, loads
 import collections
+import datetime 
 
-from C4 import GameMatrix
+from C4.GameMatrix import GameMatrix
 
 usersColumn = ('name', 'score')
 gamesColumn = ('status', 'startdate', 'enddate', 'winner', 'score', 'goal', 'players', 'shape', 'matrix')
@@ -12,25 +13,12 @@ game_userColumn = ('gid', 'uid', 'pid', 'score')
 
 users_def = '''(name text, score real)'''
 games_def = '''(status text, startdate date, enddate date,
-    name text, score real, goal integer, shape text, matrix text)'''
+    winner integer, score real, goal integer, players integer, shape text, matrix text)'''
 game_user_def = '''(gid integer, uid integer, pid integer, score real)'''
 
 
 
 date_converter = lambda x: str(datetime.datetime.fromtimestamp(int(x)))
-
-
-usersColConverter = {}
-for i, n in enumerate(usersColumn):
-    usersColConverter[n] = colConverter[testColDef[i]]
-
-gamesColConverter = {}
-for i, n in enumerate(gamesColumn):
-    gamesColConverter[n] = colConverter[testColDef[i]]
-    
-game_userColConverter = {}
-for i, n in enumerate(game_userColumn):
-    game_userColConverter[n] = colConverter[testColDef[i]]
 
 class Storage(object):
     def __init__(self, database=False):
@@ -53,36 +41,45 @@ class Storage(object):
         conn, cur = self.connect()
         users_ids = {}
         for name in users:
-            cur.execute('select ROWID from users where name=?', v)
-            r = cur.fetchone()
+            cur.execute('select * from users where name=?', (name,))
+            r = cur.fetchall()
+            print r
             if len(r):
                 print 'existing user', name, r
                 continue
-            cur.execute('insert into users (? ,?)', (name, 0))
-            r = cur.fetchone()
-            user_ids[name] = cur.lastrowid
-            
+            cur.execute('insert into users values (?, ?)', (name, 0))
+            r = cur.fetchall()
+            print r
+            users_ids[name] = cur.lastrowid
+            print 'added user', name, cur.lastrowid
+        conn.commit()
+        conn.close()
         return users_ids
 
         
     def save_game(self, game, user_map, gid=None):
+        """Save `game` GameMatrix object with `user_map` dictionary correlating player_idx:uid"""
         conn, cur = self.connect()
         info = collections.OrderedDict()
         info['status'] = 'finished' if game.winner_idx else 'paused'
         info['startdate'] = date_converter(game.startdate)
         info['enddate'] = date_converter(game.enddate)
-        info['winner'] = user_map[game.winner_idx]
-        info['score'] = game.score[game.winner_idx]
+        if game.winner_idx:
+            info['winner'] = user_map[game.winner_idx]
+            info['score'] = game.score[game.winner_idx]
+        else:
+            info['winner'], info['score'] = 0, 0
         info['goal'] = game.goal
         info['players'] = game.players
-        info['shape'] = dumps(game.shape)
+        info['shape'] = dumps([int(d) for d in game.shape])
         info['matrix'] = dumps(game.matrix)
         
         if gid is None:
             # Build and execute the insert string
             v = info.values()
             cmd = '?,' * len(v)
-            cmd = 'insert into games (' + cmd[:-1] + ')'
+            cmd = 'insert into games values (' + cmd[:-1] + ')'
+            print cmd, v
             cur.execute(cmd, v)
             cur.fetchall()
             gid = cur.lastrowid
@@ -91,14 +88,14 @@ class Storage(object):
             cmd = ''
             for p in info.iterkeys():
                 cmd += p + ' = :' + p + ', '
-            cmd = 'update games set ' + cmd[:-1]
+            cmd = 'update games set ' + cmd[:-2]
             cur.execute(cmd, info)
             cur.fetchall()
         
         # Insert related game_user rows
         cur.execute('delete from game_user where gid=?', (gid,))
         cur.fetchall()
-        cmd = 'insert into game_user (?,?,?)'
+        cmd = 'insert into game_user values (?,?,?,?)'
         for player_idx, score in game.scores.iteritems():
             cur.execute(cmd, [gid, user_map[player_idx], player_idx, score])
         conn.commit()
@@ -108,7 +105,8 @@ class Storage(object):
             if not game.scores.has_key(player_idx):
                 continue
             cur.execute('select score from users where ROWID={}'.format(uid))
-            score = cur.fetchone()[0]
+            score = cur.fetchone()
+            score = score[0]
             score += game.scores[player_idx]
             cur.execute('update users set score={} where ROWID={}'.format(score, uid))
             cur.fetchall()
@@ -116,20 +114,38 @@ class Storage(object):
         conn.commit()
         conn.close()
         return gid
-        
-    def search_gid(self, gid):
-        conn, cur = self.connect()
-        cmd = 'SELECT * from test WHERE ' + cnd + 'ORDER BY zerotime DESC'
-        cur.execute(cmd, vals)
-        r = self.cur.fetchone()
-        
+    
     def parse_game(self, row):
         """Restore a GameMatrix instance from a row"""
         startdate, enddate = row[1], row[2]
         goal = row[5]
         players = row[6]
-        matrix = loads(row[-1])
+        matrix = loads(str(row[-1]))
         shape = matrix.shape
         game = GameMatrix(shape=shape, players=players, goal=goal)
         game.matrix = matrix
+        return game
+        
+    def search_gid(self, gid):
+        conn, cur = self.connect()
+        cmd = 'select * from games where ROWID=?'
+        cur.execute(cmd, (gid,))
+        row = cur.fetchone()
+        if row is None:
+            print 'No game found for id',gid
+            return False
+        
+        user_map = {}
+        cur.execute('select * from game_user where gid=?', (gid,))
+        r = cur.fetchall()
+        for rel in r:
+            gid, uid, pid, score = rel
+            user_map[pid] = uid
+        
+        conn.close()
+        game = self.parse_game(row)
+        return game, user_map
+        
+
+    
         
