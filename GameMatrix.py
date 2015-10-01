@@ -4,7 +4,6 @@
 import numpy as np
 from time import time 
 
-#TODO: calculate score by time, not by moves
 # shape = (y,x)
 # slice [y,x]
 
@@ -23,6 +22,15 @@ def diff_match(d, start, goal=4):
     if stable.all():
         return 1
     return 0
+
+def sort_matches(matches):
+    """Iteratively sort matches"""
+    ind = np.lexsort(matches)
+    ret = []
+    for m in matches:
+        m = m[ind]
+    return matches
+        
 
 class GameMatrix(object):
     
@@ -116,12 +124,15 @@ class GameMatrix(object):
         return real_coords
     
     # WINNER IDENTIFICATION
-        
+    
     def validate_player(self, player_idx):
         """Checks if player_idx is winning somewhere"""
         if self.moves < 4:
             return False
+        print 'validate_player',player_idx
         matches = np.where(self.matrix == player_idx)
+        print 'unsorted',matches
+        matches = sort_matches(matches)
         print 'matches',matches
         # No moves by this player
         if not len(matches):

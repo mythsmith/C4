@@ -96,7 +96,12 @@ class BoardScene(QtGui.QGraphicsScene):
         delta_w, delta_h, mw, mh = self.conversion_factors()
         w2 = delta_w / 2   
         h2 = delta_h / 2
-        rect = QtCore.QRectF(x-w2, y-h2, delta_w, delta_h)
+        max_x = self.sceneRect().width() - w2
+        if x < w2:
+            x = w2
+        elif x > max_x:
+            x = max_x
+        rect = QtCore.QRectF(x-w2, 0, delta_w, delta_h)
         self.mouse_track.setRect(rect)
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.SolidPattern)

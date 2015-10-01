@@ -112,9 +112,7 @@ class TestGameMatrix(unittest.TestCase):
         self.assertTrue((x == np.array([1, 2, 3, 4])).all())
         self.assertTrue((y == np.array([0, 1, 2, 3])).all())       
     
-        
-        
-        
+
 
 if __name__ == "__main__":
     unittest.main()
