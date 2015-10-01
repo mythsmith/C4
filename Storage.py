@@ -37,15 +37,27 @@ class Storage(object):
         cur = conn.cursor()
         return conn, cur
     
+    def _query_user(self, name, cur):
+        cur.execute('select ROWID,name,score from users where name=?', (name,))
+        r = cur.fetchone() 
+        if r is None:
+            return False
+        return r
+    
+    def query_user(self, name):
+        conn, cur = self.connect()
+        return self._query_user(name, cur)
+    
     def add_users(self, users):
+        """Add users if need and returns a user_map {name:uid}"""
         conn, cur = self.connect()
         users_ids = {}
         for name in users:
-            cur.execute('select * from users where name=?', (name,))
-            r = cur.fetchall()
-            print r
-            if len(r):
+            name = unicode(name)
+            r = self._query_user(name, cur)
+            if r is not False:
                 print 'existing user', name, r
+                users_ids[name] = r[0]
                 continue
             cur.execute('insert into users values (?, ?)', (name, 0))
             r = cur.fetchall()
@@ -66,7 +78,7 @@ class Storage(object):
         info['enddate'] = date_converter(game.enddate)
         if game.winner_idx:
             info['winner'] = user_map[game.winner_idx]
-            info['score'] = game.score[game.winner_idx]
+            info['score'] = game.scores[game.winner_idx]
         else:
             info['winner'], info['score'] = 0, 0
         info['goal'] = game.goal
@@ -104,7 +116,7 @@ class Storage(object):
         for player_idx, uid in user_map.iteritems():
             if not game.scores.has_key(player_idx):
                 continue
-            cur.execute('select score from users where ROWID={}'.format(uid))
+            cur.execute('select score from users where ROWID=?',(uid,))
             score = cur.fetchone()
             score = score[0]
             score += game.scores[player_idx]
@@ -127,12 +139,14 @@ class Storage(object):
         return game
         
     def search_gid(self, gid):
+        """Search game by id and load it. 
+        Returns GameMatrix and user mapping {player_idx:uid}"""
         conn, cur = self.connect()
         cmd = 'select * from games where ROWID=?'
         cur.execute(cmd, (gid,))
         row = cur.fetchone()
         if row is None:
-            print 'No game found for id',gid
+            print 'No game found for id', gid
             return False
         
         user_map = {}

@@ -18,7 +18,7 @@ class TestStorage(unittest.TestCase):
         self.assertEqual(umap['pippo'], 1)
         self.assertEqual(umap['franco'], 2)
         r = self.s.add_users(['pippo'])
-        self.assertEqual(len(r), 0)
+        self.assertEqual(r['pippo'], 1)
         
     def test_save_game(self):
         g = GameMatrix()

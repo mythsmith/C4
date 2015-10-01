@@ -66,7 +66,11 @@ class GameMatrix(object):
         
     def pause(self):
         """Pause the game: add to delta for later resume"""
-        self.delta += time() - self.zerotime()
+        if not self.zerotime:
+            return False
+        self.delta += time() - self.zerotime
+        self.zerotime = 0
+        return True
         
     def resume(self):
         """Resume game: reset zerotime"""
@@ -98,6 +102,8 @@ class GameMatrix(object):
     def occupy(self, coords, player_idx=0):
         """Occupy requested coords with player_idx. 
         Returns coords really occupied."""
+        if not self.zerotime:
+            self.zerotime = time()
         if self.matrix[coords] != 0:
             print "Coordinates are already occupied!"
             return False

@@ -12,8 +12,10 @@ class BoardScene(QtGui.QGraphicsScene):
         self.game = game
         self.item_map = {}
         if colors is False:
-            colors = {p:int(6+p) for p in range(1,game.players+1)}
+            colors = {p:int(6 + p) for p in range(1, game.players + 1)}
         self.colors = colors
+        rect = QtCore.QRectF(0, 0, 0, 0)
+        self.mouse_track = self.addRect(rect)
         
     def setSceneRect(self, *a, **k):
         r = QtGui.QGraphicsScene.setSceneRect(self, *a, **k)
@@ -31,12 +33,12 @@ class BoardScene(QtGui.QGraphicsScene):
         delta_w, delta_h, mw, mh = self.conversion_factors()
         rect = self.sceneRect()
         pen = QtGui.QPen()
-        pen.setColor(QtGui.QColor(0,0,0))
+        pen.setColor(QtGui.QColor(0, 0, 0))
         pen.setWidth(self.line_width)
-        for i in range(mw+1):
+        for i in range(mw + 1):
             x = i * delta_w
             self.addLine(x, 0, x, rect.height(), pen)
-        for j in range(mh+1):  
+        for j in range(mh + 1):  
             y = j * delta_h
             self.addLine(0, y, rect.width(), y, pen)
         
@@ -86,6 +88,21 @@ class BoardScene(QtGui.QGraphicsScene):
             pen.setWidth(10)
             pen.setColor(brush.color())
             item.setPen(pen)
+            
+    def mouseMoveEvent(self, *args, **kwargs):
+        ret = QtGui.QGraphicsScene.mouseMoveEvent(self, *args, **kwargs)
+        pos = args[0].scenePos()
+        x, y = pos.x(), pos.y()
+        delta_w, delta_h, mw, mh = self.conversion_factors()
+        w2 = delta_w / 2   
+        h2 = delta_h / 2
+        rect = QtCore.QRectF(x-w2, y-h2, delta_w, delta_h)
+        self.mouse_track.setRect(rect)
+        brush = QtGui.QBrush()
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        brush.setColor(self.colors[self.game.player_idx])
+        self.mouse_track.setBrush(brush)
+        return ret
         
     def mouseDoubleClickEvent(self, *args, **kwargs):
         ret = QtGui.QGraphicsScene.mouseDoubleClickEvent(self, *args, **kwargs)
@@ -101,6 +118,7 @@ class BoardScene(QtGui.QGraphicsScene):
         return ret
     
     def set_cell(self, coords):
+        """Color cell coords with current player_idx color"""
         player_idx = self.game.matrix[coords]
         scene_coords = self.get_scene_coords(*coords)
         item = self.item_map.get(coords, False)
@@ -113,7 +131,7 @@ class BoardScene(QtGui.QGraphicsScene):
         print 'set_cell', player_idx, scene_coords
         delta_w, delta_h, mw, mh = self.conversion_factors()
         margin = self.line_width
-        rect = QtCore.QRectF(scene_coords[0]+margin/2, scene_coords[1]+margin/2, delta_w-margin, delta_h-margin)
+        rect = QtCore.QRectF(scene_coords[0] + margin / 2, scene_coords[1] + margin / 2, delta_w - margin, delta_h - margin)
         item = self.addRect(rect)
         brush = QtGui.QBrush()
         brush.setStyle(QtCore.Qt.SolidPattern)
