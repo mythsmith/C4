@@ -77,9 +77,8 @@ class BoardScene(QtGui.QGraphicsScene):
         return True
         
     def highlight_winner(self):
-        y, x = self.game.winning_cells
-        for i, px in enumerate(x):
-            py = y[i]
+        for cell in self.game.winning_cells:
+            py, px = cell
             item = self.item_map[(py, px)]
             brush = item.brush()
             brush.setStyle(QtCore.Qt.Dense3Pattern)

@@ -3,7 +3,8 @@
 """Basic Connect4 logic"""
 import numpy as np
 from time import time 
-
+import scipy
+from scipy import spatial
 # shape = (y,x)
 # slice [y,x]
 
@@ -11,34 +12,74 @@ def diff_match(d, start, goal=4):
     """Check for rising/stable match"""
     sublen = goal - 1
     sub = d[ start:start + sublen]
-    print 'diff_match',sub,sublen
-    rising = sub == [1]*sublen
+    print 'diff_match', sub, sublen
+    rising = sub == [1] * sublen
     if rising.all():
         return 2
-    rising = sub == [-1]*sublen
+    rising = sub == [-1] * sublen
     if rising.all():
         return 2    
-    stable = sub[:] == [0]*(sublen)
+    stable = sub[:] == [0] * (sublen)
     if stable.all():
         return 1
     return 0
 
-def sort_matches(matches):
-    """Iteratively sort matches"""
-    ind = np.lexsort(matches)
-    ret = []
-    for m in matches:
-        m = m[ind]
-    return matches
+def iter_matrix_translation(bool_matrix, translation=(1, 0), goal=4):
+    """Reiterate `translation` on `bool_matrix` for `goal` times to check if there is at least one cell remaining always True"""
+    bool_matrix = bool_matrix.copy()
+    translation = np.array(translation)
+    positive_slices = []
+    negative_slices = []
+    for i, v in enumerate(translation):
+        if v == 0:
+            positive_slices.append(slice(None, None))
+            negative_slices.append(slice(None, None))
+        else:
+            positive_slices.append(slice(v, None))
+            negative_slices.append(slice(None, -v))
+    positive_slices = tuple(positive_slices)
+    negative_slices = tuple(negative_slices)
+    for i in xrange(goal - 1):
+        positive_matrix = bool_matrix[positive_slices]
+        negative_matrix = bool_matrix[negative_slices]
+        bool_matrix = positive_matrix * negative_matrix
+        print i, bool_matrix
+        # If not true cell are left, it means this translation cannot find a solution
+        if not bool_matrix.any():
+            return False
+    # Found a solution. 
+    match = np.where(bool_matrix)
+    # Collect winning cells by applying the translation goal-times
+    coords = np.array(match)[:, 0]
+    cells = [tuple(coords)]
+    for i in xrange(goal - 1):
+        coords += translation
+        cells.append(tuple(coords))
+    return cells
         
+def scan(bool_matrix, goal=4):
+    N = len(bool_matrix.shape)
+    for i in xrange(1,2**N):
+        translation = [int(x) for x in bin(i)[2:]]
+        # Pad with zeros if it's to small: a translation must have N-length
+        longer = N-len(translation)
+        if longer:
+            translation = [0]*longer + translation
+        print 'scan ',i, translation
+        cells = iter_matrix_translation(bool_matrix, translation)
+        if cells is not False:
+            return cells
+    # Nothing found
+    return False
+    
 
 class GameMatrix(object):
     
     
-    def __init__(self, shape=(6,7), players=2, goal=4):
+    def __init__(self, shape=(6, 7), players=2, goal=4):
         self.matrix = np.zeros(shape)
         self.players = 2
-        self.goal  = 4
+        self.goal = 4
         self.player_idx = 1 
         """Current player"""
         self.winner_idx = 0
@@ -49,7 +90,7 @@ class GameMatrix(object):
         self.enddate = 0
         self.delta = 0
         self.zerotime = 0
-        self.scores = {p:0 for p in range(1, players+1)}
+        self.scores = {p:0 for p in range(1, players + 1)}
         
     @property
     def moves(self):
@@ -86,7 +127,7 @@ class GameMatrix(object):
         
     def next_player(self):
         """Move turn to the next player"""
-        self.scores[self.player_idx]+= self.delta + time() - self.zerotime
+        self.scores[self.player_idx] += self.delta + time() - self.zerotime
         self.zerotime = time()
         self.player_idx += 1
         if self.player_idx > self.players:
@@ -102,7 +143,7 @@ class GameMatrix(object):
         sub = self.matrix[c]
         match = np.where(sub > 0)[0]
         if len(match):
-            coords[0] = max(match)+1
+            coords[0] = max(match) + 1
         else:
             coords[0] = 0
         return tuple(coords)
@@ -129,56 +170,22 @@ class GameMatrix(object):
         """Checks if player_idx is winning somewhere"""
         if self.moves < 4:
             return False
-        print 'validate_player',player_idx
-        matches = np.where(self.matrix == player_idx)
-        print 'unsorted',matches
-        matches = sort_matches(matches)
-        print 'matches',matches
+        print 'validate_player', player_idx
+        bool_matrix = self.matrix == player_idx
         # No moves by this player
-        if not len(matches):
+        if bool_matrix.sum()<self.goal:
             return False
-        # No enough moves by this player
-        if len(matches[0]) < self.goal:
-            return False
-        diffs = []
-        for m in matches:
-            d = np.diff(m)
-            diffs.append(d)
-        print 'diffs',diffs
-        # Moving window iteration
-        solution = None
-        for i in xrange(len(d)-self.goal+2):
-            rising = 0
-            stable = 0
-            for d in diffs:
-                r = diff_match(d, i, self.goal)
-                print 'diff_match',r
-                if r == 2: rising += 1
-                elif r == 1: stable += 1
-                else: break
-                print 'rising, stable', rising,stable
-                if rising > 1 and stable > 1:
-                    print 'not a possible solution'
-                    break
-            print 'index',i,rising,stable
-            if rising == self.dims or rising == 1 and stable == (self.dims - 1):
-                print 'found solution',i
-                solution = i
-                break
         
-        if solution is not None:
-            self.winner_idx = player_idx
-            print 'The winner is:',player_idx
-            end = solution + self.goal
-            ret = []
-            coords = []
-            for m in matches:
-                m = m[solution:end]
-                ret.append(m)
-            self.winning_cells = ret
-            self.enddate = time()
-            return ret
-        return False
+        cells = scan(bool_matrix, self.goal)
+        if not cells:
+            return False
+        
+        self.winning_cells = cells
+        self.enddate = time()
+        self.winner_idx = player_idx
+        print 'The winner is:', player_idx
+        return cells
+
         
     def validate(self):
         """Finds adjacent occupied cells. 
@@ -186,7 +193,7 @@ class GameMatrix(object):
         if self.moves < 4:
             return False
         print self.matrix
-        for player_idx in range(1, self.players+1):
+        for player_idx in range(1, self.players + 1):
             r = self.validate_player(player_idx)
             if r is False: continue
             return player_idx, r

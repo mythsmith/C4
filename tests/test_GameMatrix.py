@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from C4.GameMatrix import GameMatrix, diff_match
+from C4.GameMatrix import GameMatrix, diff_match, iter_matrix_translation
 
 
 class TestGameMatrix(unittest.TestCase):
@@ -43,6 +43,20 @@ class TestGameMatrix(unittest.TestCase):
         # Should fall on the first free cell on x slot
         self.assertEqual(r, (1, 0))
         
+        
+    def test_iter_matrix_translation(self):
+        m = np.zeros((6,7))
+        r = iter_matrix_translation(m, [1,0])
+        self.assertFalse(r)
+        m[0,0] = 1
+        m[1,0] = 1
+        m[2,0] = 1
+        r = iter_matrix_translation(m, [1,0])
+        self.assertFalse(r)      
+        m[3,0] = 1
+        r = iter_matrix_translation(m, [1,0])
+        self.assertEqual(r, [(0, 0), (1, 0), (2, 0), (3, 0)])      
+        
     def test_diff_match(self):
         r = diff_match(np.array([0, 1, 0, 1, 2, 1, 0]), 0)
         self.assertEqual(r, 0)
@@ -63,6 +77,8 @@ class TestGameMatrix(unittest.TestCase):
         self.assertEqual(r, 2)           
         
         
+        
+        
     def test_validate_player(self):
         m = GameMatrix()
         # low moves
@@ -78,18 +94,17 @@ class TestGameMatrix(unittest.TestCase):
         self.assertFalse(m.validate_player(1))
         # Flat pattern
         m.matrix[0, 3] = 1
-        r = m.validate_player(1)
-        self.assertNotEqual(r, False)
+        cells = m.validate_player(1)
+        self.assertNotEqual(cells, False)
         # Verify winning points
-        y, x = r
-        self.assertTrue((x == np.array([0, 1, 2, 3])).all())
-        self.assertTrue((y == np.array([0, 0, 0, 0])).all())
+        self.assertEqual(cells, [(0, 0), (0, 1), (0, 2), (0, 3)])
         
         # From 1
         m.matrix[0, 0] = 2
         m.matrix[0, 4] = 1
         r = m.validate_player(1)
         self.assertNotEqual(r, False)
+        self.assertEqual(r, [(0, 1), (0, 2), (0, 3), (0, 4)])
         
         # Different order
         m.matrix[0, 4] = 2
@@ -107,12 +122,21 @@ class TestGameMatrix(unittest.TestCase):
         m.matrix[2, 3] = 2
         m.matrix[3, 4] = 2
         r = m.validate_player(2)
-        y, x = r
         self.assertNotEqual(r, False)
-        self.assertTrue((x == np.array([1, 2, 3, 4])).all())
-        self.assertTrue((y == np.array([0, 1, 2, 3])).all())       
+        self.assertEqual(r,[(0, 1), (1, 2), (2, 3), (3, 4)])     
     
-
-
+    def test_validate_player_3d(self):
+        m = GameMatrix(shape=(5,5,5))
+        m.matrix[1,1,1] = 1
+        self.assertFalse(m.validate_player(1))
+        m.matrix[2,1,1] = 1
+        m.matrix[3,1,1] = 1
+        m.matrix[4,1,1] = 1
+        r = m.validate_player(1)
+        self.assertNotEqual(r, False) 
+        self.assertEqual(r, [(1, 1, 1), (2, 1, 1), (3, 1, 1), (4, 1, 1)])
+        
+        
+        
 if __name__ == "__main__":
     unittest.main()
