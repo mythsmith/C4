@@ -27,34 +27,53 @@ class NewGame(QtGui.QDialog):
         lay.addRow('',self.start)
         self.setLayout(lay)
         self.update_players()
+        self.update_dimensions()
         
     def update_players(self, *a):
         """Update player name input fields"""
         lay = self.layout()
+        base = 0
         for i, wg in enumerate(self.users):
             for col in (0,1):
-                item = lay.itemAt(i+1,col)
+                item = lay.itemAt(i+base,col)
                 lay.removeItem(item)
                 item.widget().close()
         n = self.players.value()
         self.users = []
-        for i in xrange(1,n+1):
+        for i in xrange(n):
             user = QtGui.QLineEdit()
-            lay.insertRow(i, 'User {}'.format(i), user)
+            lay.insertRow(i+base, 'User {}:'.format(i+1), user)
             self.users.append(user)
             
-    def updae_dimensions(self):
+    def update_dimensions(self):
         """Update dimension input fields"""
         lay = self.layout()
-        u = self.users.value()
-        for i, wg in enumerate(self.dims):
+        base = self.players.value()
+        for i in xrange(lay.rowCount()-3-base-1):
             for col in (0,1):
-                item = lay.itemAt(i+1,col)
+                item = lay.itemAt(i+base,col)
+                print 'removing',i,base,i+base,col,item
+                if item is None:
+                    continue
                 lay.removeItem(item)
-                item.widget().close()  
+                item.widget().close()
         n = self.dimensions.value()
-             
-            
+        print 'new dimensions',n
+        self.dims = []
+        for i in xrange(n):
+            dim = QtGui.QSpinBox()
+            dim.setRange(2,100)
+            if i==0:
+                dim.setValue(6)
+                label = 'Height ({}):'.format(i)
+            elif i==1:
+                dim.setValue(7)
+                label = 'Width ({}):'.format(i)
+            else:
+                label = 'Dim ({})'.format(i)
+            lay.insertRow(i+base, label, dim)
+            self.dims.append(dim)
+        print self.dims 
         
         
         

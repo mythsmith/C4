@@ -67,9 +67,8 @@ class MainWindow(QtGui.QMainWindow):
         for name in users:
             user_map[pid] = user_uid[name]
             pid += 1
-            
-        shape = (dia.height.value(), dia.width.value())
-        game = GameMatrix(shape=shape, players=players, goal=dia.goal.value())
+        shape = [dim.value() for dim in dia.dims]
+        game = GameMatrix(shape=tuple(shape), players=players, goal=dia.goal.value())
         self.add_game(game, user_map, user_uid)
         
     def add_game(self, game, user_map, user_uid):

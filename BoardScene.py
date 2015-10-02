@@ -6,6 +6,8 @@ class BoardScene(QtGui.QGraphicsScene):
     signal_new_cell = lambda *a: 0
     signal_winner = lambda *a: 0
     line_width = 4
+    coord_x = 1
+    coord_y = 0
     
     def __init__(self, game, user_names = False, colors=False, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
@@ -24,10 +26,15 @@ class BoardScene(QtGui.QGraphicsScene):
         self.draw_grid()
         return r
     
+    @property
+    def shape(self):
+        return self.game.shape[self.coord_y],self.game.shape[self.coord_x]
+        
+    
     def conversion_factors(self):
         rect = self.sceneRect()
         w, h = float(rect.width()), float(rect.height())
-        mh, mw = self.game.shape 
+        mh, mw = self.shape
         delta_h, delta_w = h / mh, w / mw
         return delta_w, delta_h, mw, mh   
     
@@ -61,7 +68,7 @@ class BoardScene(QtGui.QGraphicsScene):
         """Converts matrix coords into scene coordinates.
         Returns x,y upper-left scene coords.""" 
         delta_w, delta_h, mw, mh = self.conversion_factors()
-        mh, mw = self.game.shape 
+        mh, mw = self.shape 
         x = (ix) * delta_w
         y = (mh - iy - 1) * delta_h
         return x, y
