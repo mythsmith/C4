@@ -27,7 +27,16 @@ class TestGameMatrix(unittest.TestCase):
         
         m.matrix[0, 0] = 1
         self.assertEqual(m.gravity((3, 0)), (1, 0))
-
+        
+    def test_next_player(self):
+        m = GameMatrix(players=3)
+        self.assertEqual(m.player_idx,1)
+        m.next_player()
+        self.assertEqual(m.player_idx,2)
+        m.next_player()
+        self.assertEqual(m.player_idx,3)
+        m.next_player()
+        self.assertEqual(m.player_idx,1)
         
     def test_occupy(self):
         m = GameMatrix()

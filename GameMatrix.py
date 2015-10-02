@@ -78,7 +78,7 @@ class GameMatrix(object):
     
     def __init__(self, shape=(6, 7), players=2, goal=4):
         self.matrix = np.zeros(shape)
-        self.players = 2
+        self.players = players
         self.goal = 4
         self.player_idx = 1 
         """Current player"""
@@ -131,6 +131,7 @@ class GameMatrix(object):
         self.zerotime = time()
         self.player_idx += 1
         if self.player_idx > self.players:
+            print 'resetting player_idx',self.player_idx,self.players
             self.player_idx = 1   
     
     # CELL OCCUPATION MANAGEMENT

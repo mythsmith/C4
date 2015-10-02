@@ -55,16 +55,21 @@ class MainWindow(QtGui.QMainWindow):
         
         dia = NewGame(self)
         r = dia.exec_()
-        user1 = unicode(dia.user1.text())
-        user2 = unicode(dia.user2.text())
-        if user1 == user2:
-            QtGui.QMessageBox.warning(self, 'User names cannot be equal', 'You entered two equal user name.\n Please enter different user names.')
+        users = [unicode(u.text()) for u in dia.users]
+        players = len(users)
+        if len(set(users)) != players:
+            QtGui.QMessageBox.warning(self, 'User names cannot be equal', 'You entered equal user names.\n Please enter different user names.')
             return
         
-        user_uid = self.storage.add_users((user1, user2))  # name:uid
-        user_map = {1:user_uid[user1], 2:user_uid[user2]}  # player:uid
+        user_uid = self.storage.add_users(users)  # name:uid
+        user_map = {} # player:uid
+        pid = 1
+        for name in users:
+            user_map[pid] = user_uid[name]
+            pid += 1
+            
         shape = (dia.height.value(), dia.width.value())
-        game = GameMatrix(shape=shape, goal=dia.goal.value())
+        game = GameMatrix(shape=shape, players=players, goal=dia.goal.value())
         self.add_game(game, user_map, user_uid)
         
     def add_game(self, game, user_map, user_uid):
@@ -134,3 +139,9 @@ class MainWindow(QtGui.QMainWindow):
         if q == QtGui.QMessageBox.Ok:
             self.storage.reset()
     
+if __name__ == '__main__':
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    QtGui.qApp.exec_()

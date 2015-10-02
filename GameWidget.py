@@ -9,7 +9,12 @@ class GameWidget(QtGui.QWidget):
         self.user_map = user_map  # palyer:uid
         self.user_uid = user_uid  # name:uid
     
-        self.scene = BoardScene(game)
+        users = []
+        for player_idx in xrange(1,game.players+1):
+            uid = user_map[player_idx]
+            i = user_uid.values().index(uid)
+            users.append(user_uid.keys()[i])
+        self.scene = BoardScene(game, user_names = users)
         self.scene.setSceneRect(0, 0, 700, 600)
         self.view = QtGui.QGraphicsView(self.scene)
         self.view.setMouseTracking(True)

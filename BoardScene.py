@@ -7,15 +7,17 @@ class BoardScene(QtGui.QGraphicsScene):
     signal_winner = lambda *a: 0
     line_width = 4
     
-    def __init__(self, game, colors=False, parent=None):
+    def __init__(self, game, user_names = False, colors=False, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
         self.game = game
+        self.user_names = user_names
         self.item_map = {}
         if colors is False:
             colors = {p:int(6 + p) for p in range(1, game.players + 1)}
         self.colors = colors
         rect = QtCore.QRectF(0, 0, 0, 0)
         self.mouse_track = self.addRect(rect)
+        self.mouse_text = self.addSimpleText('')
         
     def setSceneRect(self, *a, **k):
         r = QtGui.QGraphicsScene.setSceneRect(self, *a, **k)
@@ -93,6 +95,7 @@ class BoardScene(QtGui.QGraphicsScene):
         ret = QtGui.QGraphicsScene.mouseMoveEvent(self, *args, **kwargs)
         if self.game.winner_idx:
             self.mouse_track.hide()
+            self.mouse_text.hide()
             return ret
         pos = args[0].scenePos()
         x, y = pos.x(), pos.y()
@@ -110,6 +113,11 @@ class BoardScene(QtGui.QGraphicsScene):
         brush.setStyle(QtCore.Qt.SolidPattern)
         brush.setColor(self.colors[self.game.player_idx])
         self.mouse_track.setBrush(brush)
+        self.mouse_text.setPos(x+10,y+10)
+        if self.user_names:
+            txt = self.user_names[self.game.player_idx-1]
+            print txt
+            self.mouse_text.setText(txt)
         return ret
         
     def mouseDoubleClickEvent(self, *args, **kwargs):
@@ -123,6 +131,7 @@ class BoardScene(QtGui.QGraphicsScene):
         real_coords = self.occupy((y, x))
         if not real_coords:
             return ret
+        self.mouseMoveEvent(event)
         return ret
     
     def set_cell(self, coords):

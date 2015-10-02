@@ -9,7 +9,7 @@ app = QtGui.QApplication([])
 
 testdb = os.path.expanduser('~/c4test.sqlite')
 
-class TestBoard(unittest.TestCase):
+class TestMainWindow(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(testdb):
             os.remove(testdb)
