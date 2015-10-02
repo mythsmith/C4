@@ -1,15 +1,10 @@
 import sqlite3
-from os.path import expanduser
+import os
 from cPickle import dumps, loads
 import collections
 import datetime 
 
 from C4.GameMatrix import GameMatrix
-
-usersColumn = ('name', 'victories', 'score')
-gamesColumn = ('status', 'startdate', 'enddate', 'winner', 'players_names', 'score', 'goal', 'players', 'shape', 'matrix')
-game_userColumn = ('gid', 'uid', 'pid', 'score')
-
 
 users_def = '''(name text, victories integer, score real)'''
 games_def = '''(status text, startdate date, enddate date,
@@ -23,21 +18,34 @@ date_converter = lambda x: str(datetime.datetime.fromtimestamp(int(x)))
 class Storage(object):
     def __init__(self, database=False):
         if not database:
-            database = expanduser("~/.c4.sqlite")
+            database = os.path.expanduser("~/.c4.sqlite")
         self.database = database
+        self.create()
+        
+    def create(self):
+        """Create initial database structure"""
         conn, cur = self.connect()
         cur.execute("create table if not exists users " + users_def)
         cur.execute("create table if not exists games " + games_def)
         cur.execute("create table if not exists game_user " + game_user_def)
         conn.commit()
-        conn.close()
+        conn.close()      
+        
+    def reset(self):
+        """Delete database file and recreate empty one"""
+        if os.path.exists(self.database):
+            print 'deleting',self.database
+            os.remove(self.database)
+        self.create()
         
     def connect(self):
+        """Connects to db file returning connection and cursor"""
         conn = sqlite3.connect(self.database)
         cur = conn.cursor()
         return conn, cur
     
     def _query_user_by_name(self, name, cur):
+        """Fetches user row by user name"""
         cur.execute('select ROWID,name,victories,score from users where name=?', (name,))
         r = cur.fetchone() 
         if r is None:
@@ -49,6 +57,7 @@ class Storage(object):
         return self._query_user_by_name(name, cur)
     
     def _query_user_by_uid(self,uid, cur):
+        """Fetches user row by user uid"""
         cur.execute('select ROWID,name,victories,score from users where ROWID=?', (uid,))
         r = cur.fetchone()
         if r is None:

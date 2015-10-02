@@ -6,6 +6,15 @@ from C4.GameWidget import GameWidget
 from C4.ScoreBoard import ScoreBoard
 from C4.SavedGames import SavedGames
 
+def dialogize(widget, parent=None):
+    """Puts `widget` into a QDialog. Returns the new QDialog."""
+    d = QtGui.QDialog(parent=parent)
+    d.resize(widget.width() + 50, widget.height() + 50)
+    lay = QtGui.QVBoxLayout()
+    lay.addWidget(widget)
+    d.setLayout(lay)
+    return d
+    
 
 class MainWindow(QtGui.QMainWindow):
     def __init__(self, database=False):
@@ -14,8 +23,10 @@ class MainWindow(QtGui.QMainWindow):
         self.menu_game = mb.addMenu('Game')
         self.menu_game.addAction('New', self.new_game)
         self.menu_game.addAction('Save', self.save_game)
-        self.menu_game.addAction('Scoreboard', self.show_scoreboard)
-        self.menu_game.addAction('Saved Games', self.show_saved_games)
+        self.menu_scoreboard = mb.addMenu('Scoreboard')
+        self.menu_scoreboard.addAction('Scoreboard', self.show_scoreboard)
+        self.menu_scoreboard.addAction('Saved Games', self.show_saved_games)
+        self.menu_scoreboard.addAction('Reset', self.reset_storage)
         self.tabs = QtGui.QTabWidget(parent=self)
         self.tabs.currentChanged.connect(self.change_tab)
         self.setCentralWidget(self.tabs)
@@ -60,7 +71,8 @@ class MainWindow(QtGui.QMainWindow):
         """Add a new game tab"""
         gw = GameWidget(game, user_map, user_uid, parent=self)
         self.game_widgets.append(gw)
-        name = str(len(self.game_widgets))
+        name = ', '.join(user_uid.keys())
+        name += ' ({})'.format(len(self.game_widgets))
         self.tabs.addTab(gw, name)
         # If there are already moves, sync everything
         if game.moves:
@@ -96,22 +108,29 @@ class MainWindow(QtGui.QMainWindow):
                 continue
             self.game_widgets[i].game.pause()
             
-    _scoreboard = False
     def show_scoreboard(self):
-        if self._scoreboard:
-            self._scoreboard.close()
+        """Show scoreboard widget"""
         sb = ScoreBoard(self.storage.database)
-        sb.show()
-        # Keep reference
-        self._scoreboard = sb
+        d = dialogize(sb, self)
+        d.exec_()
     
     _saved_games = False
     def show_saved_games(self):
+        """Show SavedGames widgets and connect selections"""
         if self._saved_games:
             self._saved_games.close()
         sg = SavedGames(self.storage.database)
-        sg.show()
+        d = dialogize(sg, self)
+        d.show()
         # Keep reference
-        self._saved_games = sg
+        self._saved_games = d
         sg.resume_game.connect(self.resume_game)
+        
+    def reset_storage(self):
+        """Ask if to really delete the database and proceeds"""
+        q = QtGui.QMessageBox.question(self, 'Deleting scoreboard',
+                                      'Are you really sure you would like to delete the scoreboard with all saved games?',
+                                      QtGui.QMessageBox.Ok | QtGui.QMessageBox.No)
+        if q == QtGui.QMessageBox.Ok:
+            self.storage.reset()
     
