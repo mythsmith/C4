@@ -4,6 +4,7 @@ from C4.NewGame import NewGame
 from C4.GameMatrix import GameMatrix
 from C4.GameWidget import GameWidget
 from C4.ScoreBoard import ScoreBoard
+from C4.SavedGames import SavedGames
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -38,7 +39,7 @@ class MainWindow(QtGui.QMainWindow):
         return True    
         
     def new_game(self):
-        """Show new game dialog and start it"""
+        """Show new game dialog and start it in a new tab"""
         self.save_finished()
         
         dia = NewGame(self)
@@ -53,12 +54,20 @@ class MainWindow(QtGui.QMainWindow):
         user_map = {1:user_uid[user1], 2:user_uid[user2]}  # player:uid
         shape = (dia.height.value(), dia.width.value())
         game = GameMatrix(shape=shape, goal=dia.goal.value())
+        self.add_game(game, user_map, user_uid)
+        
+    def add_game(self, game, user_map, user_uid):
+        """Add a new game tab"""
         gw = GameWidget(game, user_map, user_uid, parent=self)
         self.game_widgets.append(gw)
         name = str(len(self.game_widgets))
         self.tabs.addTab(gw, name)
-        game.start()
-        
+        # If there are already moves, sync everything
+        if game.moves:
+            gw.scene.sync()
+        if not game.winner_idx:
+            game.start()
+        return gw
     
     def save_game(self):
         """Save game status into paused games and closes its tab."""
@@ -67,13 +76,17 @@ class MainWindow(QtGui.QMainWindow):
         game = gw.game
         game.pause()
         print 'SAVING', game, gw.user_map
-        self.storage.save_game(game, gw.user_map)
+        self.storage.save_game(game, gw.user_map, gw.user_uid)
         self.tabs.removeTab(g)
         
-    
-    def resume_game(self):
-        """Display paused games and allow to select a game to be resumed"""
-        pass
+    def resume_game(self, gid):
+        """Load a paused/completed game by gid"""
+        r = self.storage.search_gid(gid)
+        if r is False:
+            print 'NO GAME FOUND', gid
+        game, user_map, user_uid = r
+        game.validate()
+        self.add_game(game, user_map, user_uid)
     
     def change_tab(self, new_index):
         """Changing the tab pauses all games and resume the currently active tab"""
@@ -83,11 +96,22 @@ class MainWindow(QtGui.QMainWindow):
                 continue
             self.game_widgets[i].game.pause()
             
+    _scoreboard = False
     def show_scoreboard(self):
-        sb = ScoreBoard(self.storage.database, parent=self)
+        if self._scoreboard:
+            self._scoreboard.close()
+        sb = ScoreBoard(self.storage.database)
         sb.show()
+        # Keep reference
         self._scoreboard = sb
     
+    _saved_games = False
     def show_saved_games(self):
-        pass
+        if self._saved_games:
+            self._saved_games.close()
+        sg = SavedGames(self.storage.database)
+        sg.show()
+        # Keep reference
+        self._saved_games = sg
+        sg.resume_game.connect(self.resume_game)
     

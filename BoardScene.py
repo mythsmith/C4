@@ -91,6 +91,9 @@ class BoardScene(QtGui.QGraphicsScene):
             
     def mouseMoveEvent(self, *args, **kwargs):
         ret = QtGui.QGraphicsScene.mouseMoveEvent(self, *args, **kwargs)
+        if self.game.winner_idx:
+            self.mouse_track.hide()
+            return ret
         pos = args[0].scenePos()
         x, y = pos.x(), pos.y()
         delta_w, delta_h, mw, mh = self.conversion_factors()
@@ -153,6 +156,8 @@ class BoardScene(QtGui.QGraphicsScene):
             player_idx = self.game.matrix[it.multi_index]
             self.set_cell(it.multi_index)
             it.iternext()
+        self.game.validate()
+        self.highlight_winner()
         
 
         

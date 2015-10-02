@@ -7,13 +7,13 @@ import datetime
 from C4.GameMatrix import GameMatrix
 
 usersColumn = ('name', 'victories', 'score')
-gamesColumn = ('status', 'startdate', 'enddate', 'winner', 'score', 'goal', 'players', 'shape', 'matrix')
+gamesColumn = ('status', 'startdate', 'enddate', 'winner', 'players_names', 'score', 'goal', 'players', 'shape', 'matrix')
 game_userColumn = ('gid', 'uid', 'pid', 'score')
 
 
 users_def = '''(name text, victories integer, score real)'''
 games_def = '''(status text, startdate date, enddate date,
-    winner integer, score real, goal integer, players integer, shape text, matrix text)'''
+    winner integer, score real, players_names text, goal integer, players integer, shape text, matrix text)'''
 game_user_def = '''(gid integer, uid integer, pid integer, score real)'''
 
 
@@ -37,16 +37,23 @@ class Storage(object):
         cur = conn.cursor()
         return conn, cur
     
-    def _query_user(self, name, cur):
+    def _query_user_by_name(self, name, cur):
         cur.execute('select ROWID,name,victories,score from users where name=?', (name,))
         r = cur.fetchone() 
         if r is None:
             return False
         return r
     
-    def query_user(self, name):
+    def query_user_by_name(self, name):
         conn, cur = self.connect()
-        return self._query_user(name, cur)
+        return self._query_user_by_name(name, cur)
+    
+    def _query_user_by_uid(self,uid, cur):
+        cur.execute('select ROWID,name,victories,score from users where ROWID=?', (uid,))
+        r = cur.fetchone()
+        if r is None:
+            return False
+        return r
     
     def add_users(self, users):
         """Add users if need and returns a user_map {name:uid}"""
@@ -54,7 +61,7 @@ class Storage(object):
         users_ids = {}
         for name in users:
             name = unicode(name)
-            r = self._query_user(name, cur)
+            r = self._query_user_by_name(name, cur)
             if r is not False:
                 print 'existing user', name, r
                 users_ids[name] = r[0]
@@ -69,18 +76,19 @@ class Storage(object):
         return users_ids
 
         
-    def save_game(self, game, user_map, gid=None):
+    def save_game(self, game, user_map, user_uid, gid=None):
         """Save `game` GameMatrix object with `user_map` dictionary correlating player_idx:uid"""
         conn, cur = self.connect()
         info = collections.OrderedDict()
         info['status'] = 'finished' if game.winner_idx else 'paused'
         info['startdate'] = date_converter(game.startdate)
-        info['enddate'] = date_converter(game.enddate)
+        info['enddate'] = date_converter(game.enddate) if game.enddate else ''
         if game.winner_idx:
             info['winner'] = user_map[game.winner_idx]
             info['score'] = game.scores[game.winner_idx]
         else:
             info['winner'], info['score'] = 0, 0
+        info['players_names'] = ', '.join(user_uid.keys())
         info['goal'] = game.goal
         info['players'] = game.players
         info['shape'] = dumps([int(d) for d in game.shape])
@@ -151,15 +159,18 @@ class Storage(object):
             return False
         
         user_map = {}
+        user_uid = {}
         cur.execute('select * from game_user where gid=?', (gid,))
         r = cur.fetchall()
         for rel in r:
             gid, uid, pid, score = rel
             user_map[pid] = uid
+            user = self._query_user_by_uid(uid, cur)
+            user_uid[user[1]] = user[0]
         
         conn.close()
         game = self.parse_game(row)
-        return game, user_map
+        return game, user_map, user_uid
         
 
     

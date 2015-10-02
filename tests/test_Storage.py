@@ -22,22 +22,22 @@ class TestStorage(unittest.TestCase):
         
     def test_save_game(self):
         g = GameMatrix()
-        gid = self.s.save_game(g, {1:1, 2:2})
+        gid = self.s.save_game(g, {1:1, 2:2}, {'a':1, 'b':2})
         self.assertEqual(gid, 1)
-        gid = self.s.save_game(g, {1:1, 2:2})
+        gid = self.s.save_game(g, {1:1, 2:2}, {'a':1, 'b':2})
         self.assertEqual(gid, 2)
         # Overwrite
-        gid = self.s.save_game(g, {1:1, 2:2}, gid=1)
+        gid = self.s.save_game(g, {1:1, 2:2}, {'a':1, 'b':2}, gid=1)
         self.assertEqual(gid, 1)
         
     def test_parse_game(self):
         g = GameMatrix()
         g.matrix[1, 1] = 2
-        gid = self.s.save_game(g, {1:1, 2:2})
-        g1, user_map = self.s.search_gid(1)
+        gid = self.s.save_game(g, {1:1, 2:2}, {'pippo':1, 'franco':2})
+        g1, user_map, user_uid = self.s.search_gid(1)
         self.assertEqual(g1.matrix[1, 1], 2) 
-        self.assertEqual(user_map, {1:1,2:2})
-        
+        self.assertEqual(user_map, {1:1, 2:2})
+        self.assertEqual(user_uid, {'pippo':1, 'franco':2})
     
         
 
