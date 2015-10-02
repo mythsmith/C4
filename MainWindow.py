@@ -1,7 +1,9 @@
 from PyQt4 import QtCore, QtGui
 from C4.Storage import Storage
 from C4.NewGame import NewGame
+from C4.GameMatrix import GameMatrix
 from C4.GameWidget import GameWidget
+from C4.ScoreBoard import ScoreBoard
 
 
 class MainWindow(QtGui.QMainWindow):
@@ -23,12 +25,14 @@ class MainWindow(QtGui.QMainWindow):
         self.resize(800, 700)
         
     def save_finished(self):
-        """If active game is finished, save and close its tab"""
+        """If active game is finished, save and close its tab.
+        Otherwise, pause it."""
         g = self.tabs.currentIndex()
         if g < 0: return False
         gw = self.game_widgets[g]
         game = gw.game   
         if not game.winner_idx:
+            game.pause()
             return False
         self.save_game()
         return True    
@@ -80,7 +84,9 @@ class MainWindow(QtGui.QMainWindow):
             self.game_widgets[i].game.pause()
             
     def show_scoreboard(self):
-        pass
+        sb = ScoreBoard(self.storage.database, parent=self)
+        sb.show()
+        self._scoreboard = sb
     
     def show_saved_games(self):
         pass

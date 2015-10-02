@@ -6,12 +6,12 @@ import datetime
 
 from C4.GameMatrix import GameMatrix
 
-usersColumn = ('name', 'score')
+usersColumn = ('name', 'victories', 'score')
 gamesColumn = ('status', 'startdate', 'enddate', 'winner', 'score', 'goal', 'players', 'shape', 'matrix')
 game_userColumn = ('gid', 'uid', 'pid', 'score')
 
 
-users_def = '''(name text, score real)'''
+users_def = '''(name text, victories integer, score real)'''
 games_def = '''(status text, startdate date, enddate date,
     winner integer, score real, goal integer, players integer, shape text, matrix text)'''
 game_user_def = '''(gid integer, uid integer, pid integer, score real)'''
@@ -38,7 +38,7 @@ class Storage(object):
         return conn, cur
     
     def _query_user(self, name, cur):
-        cur.execute('select ROWID,name,score from users where name=?', (name,))
+        cur.execute('select ROWID,name,victories,score from users where name=?', (name,))
         r = cur.fetchone() 
         if r is None:
             return False
@@ -59,7 +59,7 @@ class Storage(object):
                 print 'existing user', name, r
                 users_ids[name] = r[0]
                 continue
-            cur.execute('insert into users values (?, ?)', (name, 0))
+            cur.execute('insert into users values (?, ? ,?)', (name, 0, 0))
             r = cur.fetchall()
             print r
             users_ids[name] = cur.lastrowid
@@ -116,11 +116,12 @@ class Storage(object):
         for player_idx, uid in user_map.iteritems():
             if not game.scores.has_key(player_idx):
                 continue
-            cur.execute('select score from users where ROWID=?',(uid,))
-            score = cur.fetchone()
-            score = score[0]
+            cur.execute('select victories,score from users where ROWID=?', (uid,))
+            victories, score = cur.fetchone()
+            
             score += game.scores[player_idx]
-            cur.execute('update users set score={} where ROWID={}'.format(score, uid))
+            victories += player_idx == game.winner_idx
+            cur.execute('update users set victories=?, score=? where ROWID=?', (victories, score, uid))
             cur.fetchall()
         
         conn.commit()

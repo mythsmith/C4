@@ -1,8 +1,6 @@
 from PyQt4 import QtCore, QtGui
 from time import time
 from C4.BoardScene import BoardScene
-from C4.GameMatrix import GameMatrix
-from C4.NewGame import NewGame
 
 class GameWidget(QtGui.QWidget):
     def __init__(self, game, user_map, user_uid, parent=None):
@@ -38,6 +36,9 @@ class GameWidget(QtGui.QWidget):
         uids = self.user_uid.values()
         if self.game.winner_idx:
             self.timer.stop()
+            return
+        # Paused
+        if not self.game.zerotime:
             return
         for player, uid in self.user_map.iteritems():
             score = self.game.scores[player]
