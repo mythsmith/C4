@@ -1,17 +1,18 @@
 from PyQt4 import QtCore, QtGui
 import numpy as np
 
+from C4.Game2dProxy import Game2dProxy
+
 
 class BoardScene(QtGui.QGraphicsScene):
     signal_new_cell = lambda *a: 0
     signal_winner = lambda *a: 0
     line_width = 4
-    coord_x = 1
-    coord_y = 0
     
     def __init__(self, game, user_names = False, colors=False, parent=None):
         QtGui.QGraphicsScene.__init__(self, parent=parent)
         self.game = game
+        self.game2d = Game2dProxy(self.game)
         self.user_names = user_names
         self.item_map = {}
         if colors is False:
@@ -26,15 +27,10 @@ class BoardScene(QtGui.QGraphicsScene):
         self.draw_grid()
         return r
     
-    @property
-    def shape(self):
-        return self.game.shape[self.coord_y],self.game.shape[self.coord_x]
-        
-    
     def conversion_factors(self):
         rect = self.sceneRect()
         w, h = float(rect.width()), float(rect.height())
-        mh, mw = self.shape
+        mh, mw = self.game2d.shape
         delta_h, delta_w = h / mh, w / mw
         return delta_w, delta_h, mw, mh   
     
@@ -68,14 +64,15 @@ class BoardScene(QtGui.QGraphicsScene):
         """Converts matrix coords into scene coordinates.
         Returns x,y upper-left scene coords.""" 
         delta_w, delta_h, mw, mh = self.conversion_factors()
-        mh, mw = self.shape 
+        mh, mw = self.game2d.shape 
         x = (ix) * delta_w
         y = (mh - iy - 1) * delta_h
         return x, y
         
+        
     def occupy(self, coords):
         matrix_coords = self.get_matrix_coords(*coords)
-        real_coords = self.game.occupy(matrix_coords)
+        real_coords = self.game2d.occupy(matrix_coords)
         print 'occupy', coords, matrix_coords, real_coords
         if real_coords is False:
             return False
@@ -87,7 +84,7 @@ class BoardScene(QtGui.QGraphicsScene):
         return True
         
     def highlight_winner(self):
-        for cell in self.game.winning_cells:
+        for cell in self.game2d.winning_cells:
             py, px = cell
             item = self.item_map[(py, px)]
             brush = item.brush()
@@ -123,7 +120,6 @@ class BoardScene(QtGui.QGraphicsScene):
         self.mouse_text.setPos(x+10,y+10)
         if self.user_names:
             txt = self.user_names[self.game.player_idx-1]
-            print txt
             self.mouse_text.setText(txt)
         return ret
         
@@ -143,7 +139,7 @@ class BoardScene(QtGui.QGraphicsScene):
     
     def set_cell(self, coords):
         """Color cell coords with current player_idx color"""
-        player_idx = self.game.matrix[coords]
+        player_idx = self.game2d.matrix[coords]
         scene_coords = self.get_scene_coords(*coords)
         item = self.item_map.get(coords, False)
         if item:
@@ -165,11 +161,13 @@ class BoardScene(QtGui.QGraphicsScene):
         return player_idx
         
     
-    def sync(self):
+    def sync(self,coord_mask=False):
         """Sync scene with matrix data"""
-        it = np.nditer(self.game.matrix, flags=['multi_index', 'refs_ok'])
+        if coord_mask:
+            self.game2d.coord_mask=coord_mask
+        it = np.nditer(self.game2d.matrix, flags=['multi_index', 'refs_ok'])
         while not it.finished:
-            player_idx = self.game.matrix[it.multi_index]
+            player_idx = self.game2d.matrix[it.multi_index]
             self.set_cell(it.multi_index)
             it.iternext()
         self.game.validate()

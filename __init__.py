@@ -1,4 +1,5 @@
 import GameMatrix
+import Game2dProxy
 import BoardScene
 import Storage
 

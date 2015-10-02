@@ -59,13 +59,13 @@ def iter_matrix_translation(bool_matrix, translation=(1, 0), goal=4):
         
 def scan(bool_matrix, goal=4):
     N = len(bool_matrix.shape)
-    for i in xrange(1,2**N):
+    for i in xrange(1, 2 ** N):
         translation = [int(x) for x in bin(i)[2:]]
         # Pad with zeros if it's to small: a translation must have N-length
-        longer = N-len(translation)
+        longer = N - len(translation)
         if longer:
-            translation = [0]*longer + translation
-        print 'scan ',i, translation
+            translation = [0] * longer + translation
+        print 'scan ', i, translation
         cells = iter_matrix_translation(bool_matrix, translation)
         if cells is not False:
             return cells
@@ -73,9 +73,10 @@ def scan(bool_matrix, goal=4):
     return False
     
 
+
 class GameMatrix(object):
     
-    
+    """Core logic of the game"""
     def __init__(self, shape=(6, 7), players=2, goal=4):
         self.matrix = np.zeros(shape)
         self.players = players
@@ -131,7 +132,7 @@ class GameMatrix(object):
         self.zerotime = time()
         self.player_idx += 1
         if self.player_idx > self.players:
-            print 'resetting player_idx',self.player_idx,self.players
+            print 'resetting player_idx', self.player_idx, self.players
             self.player_idx = 1   
     
     # CELL OCCUPATION MANAGEMENT
@@ -174,7 +175,7 @@ class GameMatrix(object):
         print 'validate_player', player_idx
         bool_matrix = self.matrix == player_idx
         # No moves by this player
-        if bool_matrix.sum()<self.goal:
+        if bool_matrix.sum() < self.goal:
             return False
         
         cells = scan(bool_matrix, self.goal)
