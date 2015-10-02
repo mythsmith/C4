@@ -74,6 +74,7 @@ class BoardScene(QtGui.QGraphicsScene):
         winner = self.game.validate()
         if winner is not False:
             self.highlight_winner()
+        self.signal_new_cell()
         return True
         
     def highlight_winner(self):
