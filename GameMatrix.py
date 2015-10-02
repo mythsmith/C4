@@ -8,22 +8,6 @@ from scipy import spatial
 # shape = (y,x)
 # slice [y,x]
 
-def diff_match(d, start, goal=4):
-    """Check for rising/stable match"""
-    sublen = goal - 1
-    sub = d[ start:start + sublen]
-    print 'diff_match', sub, sublen
-    rising = sub == [1] * sublen
-    if rising.all():
-        return 2
-    rising = sub == [-1] * sublen
-    if rising.all():
-        return 2    
-    stable = sub[:] == [0] * (sublen)
-    if stable.all():
-        return 1
-    return 0
-
 def iter_matrix_translation(bool_matrix, translation=(1, 0), goal=4):
     """Reiterate `translation` on `bool_matrix` for `goal` times to check if there is at least one cell remaining always True"""
     bool_matrix = bool_matrix.copy()

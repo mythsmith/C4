@@ -30,6 +30,7 @@ class NDimensionPanel(QtGui.QWidget):
             label = QtGui.QLabel(' Dim {}:'.format(i+2))
             lay.addWidget(label)
             lay.addWidget(var)
+            lay.addStretch(10)
         self.setLayout(lay)
             
     def apply(self):
