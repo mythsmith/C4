@@ -17,6 +17,9 @@ def dialogize(widget, parent=None):
     
 
 class MainWindow(QtGui.QMainWindow):
+    
+    """Main application window to manage games and scores"""
+    
     def __init__(self, database=False):
         QtGui.QMainWindow.__init__(self)
         mb = self.menuBar()
@@ -62,7 +65,7 @@ class MainWindow(QtGui.QMainWindow):
             return
         
         user_uid = self.storage.add_users(users)  # name:uid
-        user_map = {} # player:uid
+        user_map = {}  # player:uid
         pid = 1
         for name in users:
             user_map[pid] = user_uid[name]

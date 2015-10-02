@@ -1,6 +1,9 @@
 from PyQt4 import QtCore, QtGui, QtSql
     
 class SavedGames(QtGui.QTableView):
+    
+    """Explore saved games and select which one to load"""
+    
     resume_game = QtCore.pyqtSignal(int)
     
     def __init__(self, database, parent=None):

@@ -42,6 +42,9 @@ class NDimensionPanel(QtGui.QWidget):
         
 
 class GameWidget(QtGui.QWidget):
+    
+    """Game UI and statistics about current play"""
+    
     def __init__(self, game, user_map, user_uid, parent=None):
         QtGui.QWidget.__init__(self, parent=parent)
         self.game = game

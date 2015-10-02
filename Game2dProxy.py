@@ -3,6 +3,7 @@ import numpy as np
 class Game2dProxy(object):
     
     """Reduction of N-Dimensional GameMatrix into a 2D slice"""
+    
     def __init__(self, game):
         self.game = game
         self.coord_mask = [0] * self.game.dims

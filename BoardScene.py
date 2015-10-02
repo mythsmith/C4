@@ -5,6 +5,8 @@ from C4.Game2dProxy import Game2dProxy
 
 
 class BoardScene(QtGui.QGraphicsScene):
+    
+    """Game UI"""
     signal_new_cell = lambda *a: 0
     signal_winner = lambda *a: 0
     line_width = 4

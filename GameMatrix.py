@@ -42,6 +42,7 @@ def iter_matrix_translation(bool_matrix, translation=(1, 0), goal=4):
     return cells
         
 def scan(bool_matrix, goal=4):
+    """Scan all possible translations in `matrix` up to `goal` times"""
     N = len(bool_matrix.shape)
     for i in xrange(1, 2 ** N):
         translation = [int(x) for x in bin(i)[2:]]

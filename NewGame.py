@@ -1,6 +1,9 @@
 from PyQt4 import QtCore, QtGui
 
 class NewGame(QtGui.QDialog):
+    
+    """Configure a new game"""
+    
     def __init__(self, parent=None):
         QtGui.QDialog.__init__(self, parent=parent)
         self.players = QtGui.QSpinBox()

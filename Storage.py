@@ -16,6 +16,8 @@ game_user_def = '''(gid integer, uid integer, pid integer, score real)'''
 date_converter = lambda x: str(datetime.datetime.fromtimestamp(int(x)))
 
 class Storage(object):
+    """Game persistency and score counting into an SQLite db"""
+    
     def __init__(self, database=False):
         if not database:
             database = os.path.expanduser("~/.c4.sqlite")

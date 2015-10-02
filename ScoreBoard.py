@@ -1,6 +1,8 @@
 from PyQt4 import QtCore, QtGui, QtSql
     
 class ScoreBoard(QtGui.QTableView):
+    
+    """Lists scores by all users"""
 
     def __init__(self, database, parent=None):
         QtGui.QTableView.__init__(self, parent=parent)
