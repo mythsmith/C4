@@ -77,6 +77,7 @@ class GameMatrix(object):
         self.delta = 0
         self.zerotime = 0
         self.scores = {p:0 for p in range(1, players + 1)}
+        self.gid = None
         
     @property
     def moves(self):

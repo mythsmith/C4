@@ -104,7 +104,8 @@ class Storage(object):
         info['players'] = game.players
         info['shape'] = dumps([int(d) for d in game.shape])
         info['matrix'] = dumps(game.matrix)
-        
+        if gid is None:
+            gid = game.gid
         if gid is None:
             # Build and execute the insert string
             v = info.values()
@@ -150,8 +151,8 @@ class Storage(object):
     def parse_game(self, row):
         """Restore a GameMatrix instance from a row"""
         startdate, enddate = row[1], row[2]
-        goal = row[5]
-        players = row[6]
+        goal = row[6]
+        players = row[7]
         matrix = loads(str(row[-1]))
         shape = matrix.shape
         game = GameMatrix(shape=shape, players=players, goal=goal)
@@ -181,6 +182,7 @@ class Storage(object):
         
         conn.close()
         game = self.parse_game(row)
+        game.gid = gid
         return game, user_map, user_uid
         
 
