@@ -4,7 +4,7 @@ Connect Four challenge
 
 A multi-dimensional, multi-player, multi-goal "Connect Four"-like game.
 
-Run with ```pyhon MainWindow.py```.
+Run with ```python MainWindow.py```.
 
 ## Dependencies
 Python 2.7, Numpy, Scipy, PyQt4
