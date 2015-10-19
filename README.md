@@ -27,3 +27,5 @@ Concatenate to PYTHONPATH the ```parentfolder``` using the semicolon as separato
 ```
 PYTHONPATH=..some\path:C:\some\other/path;C:\Users\Foo\Desktop\parentfolder
 ```
+
+Double-click on MainWindow.py: a DOS window will open and immediately after the game window will appear.
