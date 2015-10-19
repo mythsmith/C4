@@ -14,8 +14,9 @@ On Linux (Ubuntu/Debian): `apt-get install python python-numpy python-scipy pyth
 On windows: [just install Python(x,y)](http://python-xy.github.io/downloads.html)
 
 ## Installation: Windows
-Ensure the C4 parent folder is in your PYTHONPATH environment variable
-before trying to execute MainWindow.py. Ensure the folder is called "C4" and nothing different.
+* Ensure the C4 parent folder is in your PYTHONPATH environment variable
+before trying to execute MainWindow.py. 
+* Ensure the code folder is called "C4" and nothing different.
 
 For example, if you place the folder in your desktop like that:
 ```
