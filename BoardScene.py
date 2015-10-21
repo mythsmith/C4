@@ -98,11 +98,10 @@ class BoardScene(QtGui.QGraphicsScene):
             item.setPen(pen)
             
     def mouseMoveEvent(self, *args, **kwargs):
-        ret = QtGui.QGraphicsScene.mouseMoveEvent(self, *args, **kwargs)
         if self.game.winner_idx:
             self.mouse_track.hide()
             self.mouse_text.hide()
-            return ret
+            return 
         pos = args[0].scenePos()
         x, y = pos.x(), pos.y()
         delta_w, delta_h, mw, mh = self.conversion_factors()
@@ -123,21 +122,20 @@ class BoardScene(QtGui.QGraphicsScene):
         if self.user_names:
             txt = self.user_names[self.game.player_idx-1]
             self.mouse_text.setText(txt)
-        return ret
+        return 
         
     def mouseDoubleClickEvent(self, *args, **kwargs):
-        ret = QtGui.QGraphicsScene.mouseDoubleClickEvent(self, *args, **kwargs)
         # Disable events if we already have a winner
         if self.game.winner_idx:
-            return ret
+            return 
         event = args[0]
         pos = event.scenePos()
         x, y = pos.x(), pos.y()
         real_coords = self.occupy((y, x))
         if not real_coords:
-            return ret
+            return 
         self.mouseMoveEvent(event)
-        return ret
+        return 
     
     def set_cell(self, coords):
         """Color cell coords with current player_idx color"""
